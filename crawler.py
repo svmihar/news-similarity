@@ -15,14 +15,14 @@ def save_csv(result,name='hasil'):
     df = pd.DataFrame(result)
     df.to_csv(f'{name}.csv')
 
-def crawl_kompas(url="https://indeks.kompas.com/ekonomi/",date='2019-01-07'):
+def crawl_kompas(url="https://indeks.kompas.com/ekonomi/",date='2019-01-21'):
     url = url+date+'/'
     result = []
     req = requests.get(url, headers = headers)
     soup = BeautifulSoup(req.content, "lxml")
 
     #looping through paging
-    for i in range(1,5):
+    for i in range(1,4):
         waktu = random.randint(1,5)
         time.sleep(waktu)
         print (url+str(i))
@@ -71,9 +71,7 @@ def crawl_kompas(url="https://indeks.kompas.com/ekonomi/",date='2019-01-07'):
         except BaseException as e :
             logger.error(e, exc_info=True)
             print('\n\n\n\n\ngagal ambil')
-        finally: 
-            return result
-    save_csv(result,name='kompas')
+    return result
 """ 
 #testing
 def test_kompas(): 
@@ -182,9 +180,11 @@ def crawl_kontan():
 
     return hasil
 def main():
-    # df = pd.DataFrame(crawl_kontan())
-    # df.to_csv('kontan.csv')
+    df = pd.DataFrame(crawl_kompas())
+    df.to_csv('kompas.csv')
     # crawl_kontan()
-    df2 = pd.DataFrame(crawl_kontan())
-    df2.to_csv('kontan.csv')
+    # df2 = pd.DataFrame(crawl_kontan())
+    # df2.to_csv('kontan.csv')
+    # df3=pd.DataFrame(crawl_bisnis())
+    # df3.to_csv('bisnis.csv')
 main()
