@@ -2,7 +2,7 @@
 Todo:
   ☐ bikin scraper kompas, kontan bisnis 
     [x] image
-      ☐ bikin method save image
+      [x] bikin method save image
     ☐ judul
     ☐ tanggal 
     ☐ url

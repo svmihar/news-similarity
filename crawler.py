@@ -93,49 +93,56 @@ def test_kompas():
 test_kompas()
  """
 
-def crawl_bisnis(url='https://www.bisnis.com/', date='07+January+2019'):
-     # prepare headers
 
-
-    url = url+date
+def crawl_bisnis(url='https://www.bisnis.com/index', date='21+January+2019'):
+    finansial='?c=5&d='
+    market = '?c=194&d'
+    ekonomi_bisnis = '?c=43&d='
+    semua_link = [finansial,market,ekonomi_bisnis]
+    kumpulan_link = []
     result = []
-    req = requests.get(url, headers=headers)
-    soup = BeautifulSoup(req.text, "lxml")
+    for jenis in semua_link:
+        kumpulan_link.append(url+jenis+date)
+    for link in kumpulan_link:
+        url = link
+        print('scraping: '+url)
+        req = requests.get(url, headers=headers)
+        soup = BeautifulSoup(req.text, "lxml")
 
-    #find article link
-    news_links = soup.find_all("li",{'class':'row mb-30'})
-    print('found ', len(news_links), 'links')
-    for idx, news in enumerate(news_links):
-        time.sleep(random.randint(1,10))
-        news_dict={}
+        #find article link
+        news_links = soup.find_all("li",{'class':'row mb-30'})
+        print('found ', len(news_links), 'links')
+        try:
+            for idx, news in enumerate(news_links):
+                time.sleep(random.randint(1,5))
+                news_dict={}
+                title_news = news.find('div',{'class':'title'}).text
+                url_news = news.find('a',{'class':'c-222'}).get('href')
+                print(idx+1,'/',len(news_links))
+                print("getting: ", url_news)
+                #news content
+                req_news = requests.get(url_news)
+                soup_news = BeautifulSoup(req_news.text,'lxml')
+                news_content = soup_news.find('div',{'class':'description'}).find_all('p')
+                paragraf=''.join(item .text.strip() for item in news_content)
+                image_content = soup_news.find('div',{'class':'main-image'})
+                
+                #save to dict
+                news_dict['id']=idx
+                news_dict['date']=date
+                news_dict['title'] = title_news
+                news_dict['content'] = paragraf
+                news_dict['images'] = image_content
+                news_dict['url'] = url_news
+                result.append(news_dict)
 
-        title = news.find('div',{'class':'title'}).text
-        news_url = news.find('a',{'class':'c-222'}).get('href')
-        print(idx+1,'/',len(news_links))
-
-
-        #news content
-        req_news = requests.get(news_url)
-        soup_news = BeautifulSoup(req_news.text,'lxml')
-        news_content = soup_news.find('div',{'class':'col-sm-10'})
-
-        #find paragraph 
-        p = news_content.find_all('p')
-        content = ' '.join(item .text for item in p)
-        news_content = content
-
-        #wrap in dictionary
-        news_dict['id']=idx
-        news_dict['url'] = news_url
-        news_dict['title'] = title
-        news_dict['content'] = news_content
-        result.append(news_dict)
-
-
+        except BaseException as e :
+            logger.error(e, exc_info=True)
+            print("gagal mengambil link\n\n\n\n\n\n\n")
     return result
-crawl_bisnis()
+
 # kontan 
-def crawl_kontan(url, run_headless=True):
+def crawl_kontan(url):
     def scrollDown(browser, numberOfScrollDowns):
         body = browser.find_element_by_tag_name("body")
         while numberOfScrollDowns >=0:
