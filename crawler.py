@@ -2,32 +2,18 @@ from bs4 import BeautifulSoup
 import requests
 import time
 import random
-import json 
-import io 
-import pandas as pd
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from pprint import pprint
 import csv
 import logging
-
+import pandas as pd 
 logger = logging.Logger('catch_all')
 headers = {'User-Agent': 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)'}
 
-def save_csv(result):
-    # writing dict(key, value) inside a list
-    for items in result: 
-            print()
-    csv_columns = items.keys()
-    csv_file = 'dict.csv'
-    try:
-        with open(csv_file, 'w') as csvfile:
-            writer = csv.DictWriter(csvfile, fieldnames=csv_columns)
-            writer.writeheader()
-            for data in result:
-                writer.writerow(data)
-    except IOError:
-        print("I/O error") 
+def save_csv(result,name='hasil'):
+    df = pd.DataFrame(result)
+    df.to_csv(f'{name}.csv')
 
 def crawl_kompas(url="https://indeks.kompas.com/ekonomi/",date='2019-01-07'):
     url = url+date+'/'
@@ -75,18 +61,20 @@ def crawl_kompas(url="https://indeks.kompas.com/ekonomi/",date='2019-01-07'):
 
                 #wrap in dictionary 
                 news_dict['id']=[i,idx]
+                news_dict['sumber']='kompas'
                 news_dict['date']=date
                 news_dict['title'] = title_news
                 news_dict['content'] = news_content
                 news_dict['images'] = image_content
                 news_dict['url'] = url_news
                 result.append(news_dict)
-            
-            return result
         except BaseException as e :
             logger.error(e, exc_info=True)
             print('\n\n\n\n\ngagal ambil')
-       """ 
+        finally: 
+            return result
+    save_csv(result,name='kompas')
+""" 
 #testing
 def test_kompas(): 
     pprint(crawl_kompas(date='2019-01-21'))
@@ -112,8 +100,8 @@ def crawl_bisnis(url='https://www.bisnis.com/index', date='21+January+2019'):
         #find article link
         news_links = soup.find_all("li",{'class':'row mb-30'})
         print('found ', len(news_links), 'links')
-        try:
-            for idx, news in enumerate(news_links):
+        for idx, news in enumerate(news_links):
+            try:
                 time.sleep(random.randint(1,5))
                 news_dict={}
                 title_news = news.find('div',{'class':'title'}).text
@@ -129,6 +117,7 @@ def crawl_bisnis(url='https://www.bisnis.com/index', date='21+January+2019'):
                 
                 #save to dict
                 news_dict['id']=idx
+                news_dict['sumber']='bisnis'
                 news_dict['date']=date
                 news_dict['title'] = title_news
                 news_dict['content'] = paragraf
@@ -136,25 +125,16 @@ def crawl_bisnis(url='https://www.bisnis.com/index', date='21+January+2019'):
                 news_dict['url'] = url_news
                 result.append(news_dict)
 
-        except BaseException as e :
-            logger.error(e, exc_info=True)
-            print("gagal mengambil link\n\n\n\n\n\n\n")
+            except BaseException as e :
+                logger.error(e, exc_info=True)
+                print("gagal mengambil link\n\n\n\n\n\n\n")
+    
     return result
 
-# kontan 
-def crawl_kontan(url):
-    def scrollDown(browser, numberOfScrollDowns):
-        body = browser.find_element_by_tag_name("body")
-        while numberOfScrollDowns >=0:
-            time.sleep(1)
-            body.send_keys(Keys.END)
-            numberOfScrollDowns -= 1
-        return browser
+def crawl_kontan(): 
+    url_investasi = 'https://search.kontan.co.id/indeks?kanal=investasi&tanggal=21&bulan=01&tahun=2019&pos=indeks'
+    url_keuangan = 'https://search.kontan.co.id/indeks?kanal=keuangan&tanggal=21&bulan=01&tahun=2019&pos=indeks'
 
-    def correct_url(url): 
-        if not url.startswith("http://") and not url.startswith("https://"):
-            url = "http://" + url
-        return url
 
     def check_insight(url):
         if "insight" not in url:
@@ -162,51 +142,49 @@ def crawl_kontan(url):
         else:
             print('found insight')
             return False
-    
-    result = []
-    url = correct_url(url)
-    browser = webdriver.Firefox()
-    browser.set_window_size(1280,720)
-    browser.get(url)
-    browser = scrollDown(browser, 10)
-    """ innerHTML = browser.execute_script("return document.body.outerHTML") #returns the inner HTML as a string
-    print(innerHTML) """
-    body = browser.find_element_by_tag_name("body")
-    bodyText = body.get_attribute("outerHTML")
-    soup=BeautifulSoup(bodyText,"lxml")
-    news_links = soup.find_all("h1")
-    print(len(news_links))
-    for index, news in enumerate(news_links):
-        news_dict={}
-        title_news = news.find('a').content
-        url_news = news.find('a').get('href')
-        url_news = 'http:'+url_news
-        if check_insight(url_news):
-            print(url_news)
-            req_news = requests.get(url_news)
-        else:
-            print("\n")
-            print("\n","---PREMIUM PAGE DETECTED---","\n")
-            print("\n","\n","\n","\n","\n","\n","\n","\n","\n","\n","\n")
-        soup_news = BeautifulSoup(req_news.content,"html.parser")
-        print(index,"/",len(news_links), "links scraped")
-        news_content = soup_news.find("div",{'itemprop':'articleBody'})
-        try:
+    url = [url_investasi,url_keuangan]
+    hasil=[]
+    for i,web in enumerate(url): 
+        req = requests.get(web)
+        soup = BeautifulSoup(req.text,"html.parser")
+        links = soup.find_all('h1')
+        for idx,link in enumerate(links): 
+            news_dict={}
+            link = 'https:'+link.a['href']
+            if check_insight(link):
+                print('scraping: ',link)
+                req_news = requests.get(link)
+            else:
+                print("\n")
+                print("\n","---PREMIUM PAGE DETECTED---","\n")
+                print("\n","\n","\n","\n","\n","\n","\n","\n","\n","\n","\n")
+            soup_news = BeautifulSoup(req_news.content,'lxml')
+            news_content = soup_news.find("div",{'itemprop':'articleBody'})
             p = news_content.find_all('p')
-            content = ' '.join(item .text for item in p)
-            print(type(news_content))
-            print(len(news_content))
-            news_content = content
+            content = " ".join(item .text.strip() for item in p)
+            print('paragraf: \t',content)
+            image_content = soup_news.find('div',{'class':'img-detail-desk'})
+            title_news = soup_news.find('h1',{"class":"detail-desk"})
+            date = soup_news.find('div',{'class':" fs14 ff-opensans font-gray"})
+            image_content='https:'+image_content.img['src']
+            print('image: ',image_content,'\n')
 
 
-            news_dict['id']=index
-            news_dict['title']=title_news
-            news_dict['url'] = url_news
-            news_dict['content'] = news_content
-            result.append(news_dict)
-        except AttributeError:
-            print('error', AttributeError)
-            print('skipped')
-            pass        
-    browser.quit()
-    return result
+        #wrap in dictionary 
+            news_dict['id']=[i,idx]
+            news_dict['sumber']='kontan'
+            news_dict['date']=date.text
+            news_dict['title'] = title_news.text
+            news_dict['content'] = content
+            news_dict['images'] = image_content
+            news_dict['url'] = link
+            hasil.append(news_dict)
+
+    return hasil
+def main():
+    # df = pd.DataFrame(crawl_kontan())
+    # df.to_csv('kontan.csv')
+    # crawl_kontan()
+    df2 = pd.DataFrame(crawl_kontan())
+    df2.to_csv('kontan.csv')
+main()

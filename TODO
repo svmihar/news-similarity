@@ -3,10 +3,12 @@ Todo:
   ☐ bikin scraper kompas, kontan bisnis 
     [x] image
       [x] bikin method save image
-    ☐ judul
-    ☐ tanggal 
-    ☐ url
-  ☐ bikin csv importer pake pandas
+    [x] judul
+    [x] tanggal 
+    [x] url
+  [x] bikin csv importer pake pandas
+    [ ] bikin def informasi
 
   catatan
   - scoring bisa pakai berita terpopuler: kompas ada.
+  - cosine similarity: https://yudiwbs.wordpress.com/2018/03/31/word2vec-wikipedia-bahasa-indonesia-dengan-python-gensim/
