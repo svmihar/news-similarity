@@ -1,0 +1,12 @@
+
+Todo:
+  ☐ bikin scraper kompas, kontan bisnis 
+    [x] image
+      ☐ bikin method save image
+    ☐ judul
+    ☐ tanggal 
+    ☐ url
+  ☐ bikin csv importer pake pandas
+
+  catatan
+  - scoring bisa pakai berita terpopuler: kompas ada.
