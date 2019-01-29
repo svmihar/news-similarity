@@ -72,15 +72,32 @@ def crawl_kompas(url="https://indeks.kompas.com/ekonomi/",date='2019-01-21'):
             logger.error(e, exc_info=True)
             print('\n\n\n\n\ngagal ambil')
     return result
-""" 
-#testing
-def test_kompas(): 
-    pprint(crawl_kompas(date='2019-01-21'))
-test_kompas()
- """
 
+def crawl_bisnis(url='https://www.bisnis.com/index', date=13,month=12,year=2018):
+    def format_month(month):
+        switcher = {
+            '01':'January',
+            '02':'February',
+            '03':'March',
+            '04':'April',
+            '05':'May',
+            '06':'June',
+            '07':'July',
+            '08':'August',
+            '09':'September',
+            '10':'October',
+            '11':'November',
+            '12':'December'
+        }
+        return switcher.get(month,None)
+    def format_date(date):
+        date =list(date)
+        hasil = [x if x!='-' else '+' for x in date]
+        return ''.join(hasil) 
 
-def crawl_bisnis(url='https://www.bisnis.com/index', date='21+January+2019'):
+    month = format_month(month)
+    date = f'{date}-{month}-{year}'
+    date = format_date(date)
     finansial='?c=5&d='
     market = '?c=194&d'
     ekonomi_bisnis = '?c=43&d='
@@ -129,9 +146,12 @@ def crawl_bisnis(url='https://www.bisnis.com/index', date='21+January+2019'):
     
     return result
 
-def crawl_kontan(): 
-    url_investasi = 'https://search.kontan.co.id/indeks?kanal=investasi&tanggal=21&bulan=01&tahun=2019&pos=indeks'
-    url_keuangan = 'https://search.kontan.co.id/indeks?kanal=keuangan&tanggal=21&bulan=01&tahun=2019&pos=indeks'
+def crawl_kontan(date='21-01-2019'): 
+    print('will scrape kontan (keuangan and investasi) now...')
+    print('scraping on date: ',date)
+    date = date.split('-')
+    url_investasi = f'https://search.kontan.co.id/indeks?kanal=investasi&tanggal={date[0]}&bulan={date[1]}&tahun={date[2]}&pos=indeks'
+    url_keuangan = f'https://search.kontan.co.id/indeks?kanal=keuangan&tanggal={date[0]}&bulan={date[1]}&tahun={date[2]}&pos=indeks'
 
 
     def check_insight(url):
@@ -167,7 +187,6 @@ def crawl_kontan():
             image_content='https:'+image_content.img['src']
             print('image: ',image_content,'\n')
 
-
         #wrap in dictionary 
             news_dict['id']=[i,idx]
             news_dict['sumber']='kontan'
@@ -180,11 +199,19 @@ def crawl_kontan():
 
     return hasil
 def main():
-    df = pd.DataFrame(crawl_kompas())
-    df.to_csv('kompas.csv')
-    # crawl_kontan()
-    # df2 = pd.DataFrame(crawl_kontan())
-    # df2.to_csv('kontan.csv')
-    # df3=pd.DataFrame(crawl_bisnis())
-    # df3.to_csv('bisnis.csv')
+    date = input('insert dd: ')
+    month = input('insert mm: ')
+    year = input('insert yyyy: ')
+    df = pd.DataFrame(crawl_kompas(date=year+'-'+month+'-'+date))
+    df2 = pd.DataFrame(crawl_kontan(date=date+'-'+'-'+year))
+    df3=pd.DataFrame(crawl_bisnis(date=date,month=month,year=year))
+    frame = [df,df2,df3]
+    hasil = pd.concat(frame)
+
+
+    # hasil.to_csv('ALL.csv')
+    writer = pd.ExcelWriter("dataframe.xlsx", engine='xlsxwriter')
+    hasil.to_excel(writer,sheet_name = 'all', index=False)
+    writer.save() 
+    print("scraped done on date", f'{date}-{month}-{year} saved to dataframe.xlsx')
 main()

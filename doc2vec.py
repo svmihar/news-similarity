@@ -23,7 +23,6 @@ tagged_data = [TaggedDocument(words=word_tokenize(item.lower()), tags =[str(i)])
 #     model.min_alpha=model.alpha
 # model.save("testd2v.mode")
 # print('done')
-
 model= Doc2Vec.load("testd2v.model")
 print(model.docvecs.count)
 print(model.most_similar('kompas'))
