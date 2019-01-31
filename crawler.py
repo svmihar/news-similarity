@@ -15,6 +15,21 @@ def save_csv(result,name='hasil'):
     df = pd.DataFrame(result)
     df.to_csv(f'{name}.csv')
 
+def ada_baca_juga(text):
+    if "Baca juga" in text:
+        return True
+
+def save_img(foldername,link,title_name='TITLE'):
+    foldername = foldername+'/'
+    print("saving images...")
+    if link.find('/'):
+        filename= link.rsplit('/', 1)[1]
+    req = requests.get(link)
+    filename ='img/'+foldername+title_name+' - '+filename 
+    open(filename,'wb').write(req.content)
+    print(f"{filename} saved to img/{foldername}")
+
+
 def crawl_kompas(url="https://indeks.kompas.com/ekonomi/",date='2019-01-21'):
     url = url+date+'/'
     result = []
@@ -54,11 +69,17 @@ def crawl_kompas(url="https://indeks.kompas.com/ekonomi/",date='2019-01-21'):
                 news_content = soup_news.find("div",{'class':'read__content'})
                 image_content = soup_news.find('div',{'class':"photo"})
                 image_content=image_content.img['src']
+                save_img('kompas',image_content,title_name=title_news)
                 #find paragraph in news content 
+                para = []
                 p = news_content.find_all('p')
-                content = ' '.join(item .text for item in p)
+                for par in p: 
+                    if not ada_baca_juga(par.text):
+                        para.append(par.text)
+                content = ' '.join(item for item in para)
                 news_content = content
-
+                date = soup_news.find('dv',{'class':'read__time'})
+                date = date.text.rsplit('-')[1]
                 #wrap in dictionary 
                 news_dict['id']=[i,idx]
                 news_dict['sumber']='kompas'
@@ -129,7 +150,9 @@ def crawl_bisnis(url='https://www.bisnis.com/index', date=13,month=12,year=2018)
                 news_content = soup_news.find('div',{'class':'description'}).find_all('p')
                 paragraf=''.join(item .text.strip() for item in news_content)
                 image_content = soup_news.find('div',{'class':'main-image'})
-                
+                save_img('bisnis',image_content,title_name=title_news)
+                date = soup.find('div',{'class':'author'})
+                date =date.text.rsplit('|',1)[1]
                 #save to dict
                 news_dict['id']=idx
                 news_dict['sumber']='bisnis'
@@ -186,7 +209,7 @@ def crawl_kontan(date='21-01-2019'):
             date = soup_news.find('div',{'class':" fs14 ff-opensans font-gray"})
             image_content='https:'+image_content.img['src']
             print('image: ',image_content,'\n')
-
+            save_img('kontan',image_content,title_name=title_news.text)
         #wrap in dictionary 
             news_dict['id']=[i,idx]
             news_dict['sumber']='kontan'
@@ -198,6 +221,8 @@ def crawl_kontan(date='21-01-2019'):
             hasil.append(news_dict)
 
     return hasil
+
+
 def main():
     date = input('insert dd: ')
     month = input('insert mm: ')
@@ -213,5 +238,6 @@ def main():
     writer = pd.ExcelWriter("dataframe.xlsx", engine='xlsxwriter')
     hasil.to_excel(writer,sheet_name = 'all', index=False)
     writer.save() 
-    print("scraped done on date", f'{date}-{month}-{year} saved to dataframe.xlsx')
+    print("scraped done on date", f'{date}-{month}-{year} saved to')
+
 main()
