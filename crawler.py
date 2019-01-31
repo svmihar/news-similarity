@@ -78,7 +78,7 @@ def crawl_kompas(url="https://indeks.kompas.com/ekonomi/",date='2019-01-21'):
                         para.append(par.text)
                 content = ' '.join(item for item in para)
                 news_content = content
-                date = soup_news.find('dv',{'class':'read__time'})
+                date = soup_news.find('div',{'class':'read__time'})
                 date = date.text.rsplit('-')[1]
                 #wrap in dictionary 
                 news_dict['id']=[i,idx]
@@ -149,7 +149,7 @@ def crawl_bisnis(url='https://www.bisnis.com/index', date=13,month=12,year=2018)
                 soup_news = BeautifulSoup(req_news.text,'lxml')
                 news_content = soup_news.find('div',{'class':'description'}).find_all('p')
                 paragraf=''.join(item .text.strip() for item in news_content)
-                image_content = soup_news.find('div',{'class':'main-image'})
+                image_content = soup_news.find('div',{'class':'main-image'}).img['src']
                 save_img('bisnis',image_content,title_name=title_news)
                 date = soup.find('div',{'class':'author'})
                 date =date.text.rsplit('|',1)[1]
