@@ -225,20 +225,21 @@ def crawl_kontan(date='21-01-2019'):
 
 
 def main():
-    date = input('insert dd: ')
+    # date = input('insert dd: ')
     month = input('insert mm: ')
     year = input('insert yyyy: ')
-    df = pd.DataFrame(crawl_kompas(date=year+'-'+month+'-'+date))
-    df2 = pd.DataFrame(crawl_kontan(date=date+'-'+'-'+year))
-    df3=pd.DataFrame(crawl_bisnis(date=date,month=month,year=year))
-    frame = [df,df2,df3]
-    hasil = pd.concat(frame)
-
-
-    # hasil.to_csv('ALL.csv')
-    writer = pd.ExcelWriter("dataframe.xlsx", engine='xlsxwriter')
-    hasil.to_excel(writer,sheet_name = 'all', index=False)
-    writer.save() 
+    # df = pd.DataFrame(crawl_kompas(date=year+'-'+month+'-'+date))
+    # df2 = pd.DataFrame(crawl_kontan(date=date+'-'+'-'+year))
+    # df3=pd.DataFrame(crawl_bisnis(date=date,month=month,year=year))
+    # frame = [df,df2,df3]
+    # hasil = pd.concat(frame)
+    temp = []
+    # for i in range(1,17): 
+    #     temp.append(crawl_kompas(date=year+'-'+month+'-'+str(i))
+        # test = pd.DataFrame()
+    for i in range(1,17):
+        temp.append(crawl_kompas(date=year+'-'+month+'-'+str(i)))
+    print(temp)
     print("scraped done on date", f'{date}-{month}-{year} saved to')
 
 main()

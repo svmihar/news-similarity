@@ -30,6 +30,8 @@ for berita,titel in zip(isi,judul):
     except: 
         print('gagal')
 
+df.dropna(inplace=True)
+
 df['titel_stem'] = hasil_judul
 df['content_stem'] = hasil_isi
 
